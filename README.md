@@ -22,18 +22,6 @@ pip install -r requirements.txt
 If you are consuming the published package, the same set of runtime
 dependencies is available via `pip install svg-translate`.
 
-### Optional server & CLI tooling
-
-The repository also contains ancillary scripts for running web services or
-batch translation jobs. Install their dependencies by requesting the `server`
-extra or by using the bundled optional requirements file:
-
-```bash
-pip install svg-translate[server]
-# or
-pip install -r requirements.optional.txt
-```
-
 ## Usage
 
 ### Extracting and injecting in a single step
