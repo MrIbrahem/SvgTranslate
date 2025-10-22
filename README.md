@@ -20,7 +20,10 @@ pip install -r requirements.txt
 ```
 
 If you are consuming the published package, the same set of runtime
-dependencies is available via `pip install svg-translate`.
+dependencies is available via 
+```bash
+pip install SvgTranslate
+```
 
 ## Usage
 
