@@ -2,27 +2,12 @@
 
 This tool extracts multilingual text pairs from SVG files and applies translations to other SVG files by inserting missing `<text systemLanguage="XX">` blocks.
 
-## Features
-
-- Extract translations from SVG files with multilingual content
-- Inject translations into SVG files that lack them
-- Preserve original formatting and attributes during injection
-- Support for dry-run mode to preview changes
-- Case-insensitive matching option for extraction
-- Comprehensive logging for both workflows
-
 ## Installation
 
 This tool requires Python 3.10+. Install the lightweight core dependencies with:
 
 ```bash
-pip install -r requirements.txt
-```
-
-If you are consuming the published package, the same set of runtime
-dependencies is available via
-```bash
-pip install SvgTranslate
+pip install CopySvgTranslate
 ```
 ## Usage
 
@@ -30,7 +15,7 @@ pip install SvgTranslate
 
 ```python
 from pathlib import Path
-from SvgTranslate import svg_extract_and_inject
+from CopySvgTranslate import svg_extract_and_inject
 
 tree = svg_extract_and_inject(
     extract_file=Path("examples/source_multilingual.svg"),
@@ -42,18 +27,18 @@ if tree is not None:
     print("Injection completed!")
 ```
 
-The helper stores the extracted phrases under `SvgTranslate/data/` and,
+The helper stores the extracted phrases under `CopySvgTranslate/data/` and,
 when `save_result=True`, writes the translated SVG to
-`SvgTranslate/translated/`. If you also need statistics about how many
+`CopySvgTranslate/translated/`. If you also need statistics about how many
 translations were inserted, call the lower level injector with
 `return_stats=True`:
 
 ```python
-from SvgTranslate.injection import inject
+from CopySvgTranslate.injection import inject
 
 tree, stats = inject(
     inject_file="examples/target_missing_translations.svg",
-    mapping_files=["SvgTranslate/data/source_multilingual.svg.json"],
+    mapping_files=["CopySvgTranslate/data/source_multilingual.svg.json"],
     save_result=True,
     return_stats=True,
 )
@@ -70,7 +55,7 @@ files are written.
 
 ```python
 from pathlib import Path
-from SvgTranslate import svg_extract_and_injects
+from CopySvgTranslate import svg_extract_and_injects
 
 translations = {
     "new": {

@@ -1,4 +1,4 @@
-"""Injection phase helpers for SvgTranslate."""
+"""Injection phase helpers for CopySvgTranslate."""
 
 from .batch import start_injects
 from .injector import (

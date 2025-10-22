@@ -1,27 +1,27 @@
 # Comprehensive Unit Tests - Summary
 
 ## Overview
-This document summarizes the comprehensive unit tests generated for the SvgTranslate package refactoring (package rename from `svg_translate` to `SvgTranslate`).
+This document summarizes the comprehensive unit tests generated for the CopySvgTranslate package refactoring (package rename from `svg_translate` to `CopySvgTranslate`).
 
 ## Changes Tested
 
 ### Primary Changes in the Diff
-1. **Package Rename**: `svg_translate` → `SvgTranslate` 
-2. **New Public API Module**: `SvgTranslate/__init__.py` - Serves as the main entry point
+1. **Package Rename**: `svg_translate` → `CopySvgTranslate`
+2. **New Public API Module**: `CopySvgTranslate/__init__.py` - Serves as the main entry point
 3. **Import Path Updates**: All test files updated to use new import paths
 
 ### Files Modified in Diff
-- `SvgTranslate/__init__.py` (NEW - main focus of testing)
-- `SvgTranslate/extraction/__init__.py`
-- `SvgTranslate/injection/__init__.py`
-- `SvgTranslate/workflows.py`
-- `SvgTranslate/text_utils.py`
+- `CopySvgTranslate/__init__.py` (NEW - main focus of testing)
+- `CopySvgTranslate/extraction/__init__.py`
+- `CopySvgTranslate/injection/__init__.py`
+- `CopySvgTranslate/workflows.py`
+- `CopySvgTranslate/text_utils.py`
 - Test files: `tests/conftest.py`, `tests/test.py`, `tests/test_svgtranslate.py`
 
 ## Test Files Created/Modified
 
 ### 1. `tests/test_public_api.py` (NEW - 56 tests)
-Comprehensive tests for the new public API module (`SvgTranslate/__init__.py`).
+Comprehensive tests for the new public API module (`CopySvgTranslate/__init__.py`).
 
 #### Test Classes:
 
@@ -30,7 +30,7 @@ Comprehensive tests for the new public API module (`SvgTranslate/__init__.py`).
 - Verifies all exported functions are callable
 - Tests individual function imports
 - Validates module docstring
-- Tests star import (`from SvgTranslate import *`)
+- Tests star import (`from CopySvgTranslate import *`)
 - Ensures no private names in exports
 
 **TestNormalizeTextFunction** (12 tests)
@@ -190,7 +190,7 @@ pytest tests/
 pytest tests/test_public_api.py -v
 
 # Run with coverage
-pytest tests/ --cov=SvgTranslate --cov-report=html
+pytest tests/ --cov=CopySvgTranslate --cov-report=html
 ```
 
 ## Key Testing Principles Applied
