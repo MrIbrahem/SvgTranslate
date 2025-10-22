@@ -1,3 +1,14 @@
+[project]
+name = "svg-translate"
+version = "0.0.0"
+description = "Utilities for extracting and injecting translations in SVG files."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "lxml",
+    "tqdm"
+]
+
 [tool.black]
 line-length = 100
 target-version = ["py311"]
