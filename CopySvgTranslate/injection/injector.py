@@ -300,8 +300,7 @@ def inject(
         # Write the modified SVG
         try:
             tree.write(str(target_path), encoding='utf-8', xml_declaration=True, pretty_print=True)
-            logger.debug(f"Saved modified SVG to {output_file}")
-            tree.write(str(target_path), encoding='utf-8', xml_declaration=True, pretty_print=True)
+            logger.debug(f"Saved modified SVG to {target_path}")
         except Exception as e:
             logger.error(f"Failed writing {target_path}: {e}")
             tree = None
