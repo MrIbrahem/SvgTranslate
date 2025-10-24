@@ -22,14 +22,19 @@ def extract(svg_file_path, case_insensitive: bool = True):
 
     # Parse SVG as XML
     parser = etree.XMLParser(remove_blank_text=True)
-    tree = etree.parse(str(svg_file_path), parser)
+    try:
+        tree = etree.parse(str(svg_file_path), parser)
+    except (etree.XMLSyntaxError, OSError) as exc:
+        logger.error(f"Failed to parse SVG file {svg_file_path}: {exc}")
+        return None
     root = tree.getroot()
 
     # Find all switch elements
     switches = root.xpath('//svg:switch', namespaces={'svg': 'http://www.w3.org/2000/svg'})
     logger.debug(f"Found {len(switches)} switch elements")
 
-    translations = {"new": {"default_tspans_by_id": {}}, "old_way": {}}
+    default_tspans_by_id = {}
+    translations = {"new": {}}
     processed_switches = 0
 
     for switch in switches:
@@ -93,7 +98,7 @@ def extract(svg_file_path, case_insensitive: bool = True):
 
             tspans = text_elem.xpath('./svg:tspan', namespaces={'svg': 'http://www.w3.org/2000/svg'})
             if tspans:
-                tspans_to_id = {tspan.text.strip(): tspan.get('id') for tspan in tspans if tspan.text}
+                tspans_to_id = {tspan.text.strip(): tspan.get('id') for tspan in tspans if tspan.text and tspan.text.strip() and tspan.get('id')}
                 # Return a list of text from each tspan element
                 text_contents = [tspan.text.strip() if tspan.text else "" for tspan in tspans]
             else:
@@ -130,39 +135,17 @@ def extract(svg_file_path, case_insensitive: bool = True):
 
         # If we found both default text and translations, add to our data
         if default_texts and switch_translations:
-            # Create a key from the first default text (we could use all texts but this is simpler)
-            default_key = default_texts[0]
-            translations["old_way"].setdefault(
-                default_key,
-                {"_texts": default_texts, "_translations": {}},
-            )
-
-            # Store translations for each language and each text
-            for lang, translated_texts in switch_translations.items():
-                translations["old_way"][default_key]['_translations'][lang] = translated_texts
-
             processed_switches += 1
             logger.debug(f"Processed switch with default texts: {default_texts}")
 
     logger.debug(f"Extracted translations for {processed_switches} switches")
 
-    # Count languages
-    all_languages = set()
-    for text_dict in translations["old_way"].values():
-        all_languages.update(text_dict.get("_translations", {}).keys())
-    logger.debug(f"Found translations in {len(all_languages)} languages: {', '.join(sorted(all_languages))}")
-
     translations["title"] = {}
     for key, mapping in list(translations["new"].items()):
-        if key == "default_tspans_by_id":
-            continue
         if key and key[-4:].isdigit():
             year = key[-4:]
             if key != year and all(value[-4:].isdigit() and value[-4:] == year for value in mapping.values()):
                 translations["title"][key[:-4]] = {lang: text[:-4] for lang, text in mapping.items()}
-
-    if not translations["new"]["default_tspans_by_id"]:
-        translations["new"].pop("default_tspans_by_id")
 
     if not translations["new"]:
         translations.pop("new")

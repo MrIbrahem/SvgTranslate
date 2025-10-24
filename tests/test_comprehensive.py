@@ -25,6 +25,7 @@ from CopySvgTranslate.injection.preparation import (
     SvgStructureException,
 )
 from CopySvgTranslate.workflows import svg_extract_and_inject, svg_extract_and_injects
+from tests._cleanup import cleanup_directory
 
 
 class TestTextUtils(unittest.TestCase):
@@ -180,9 +181,7 @@ class TestInjector(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        for file in self.test_dir.glob('*'):
-            file.unlink()
-        self.test_dir.rmdir()
+        cleanup_directory(self.test_dir)
 
     def test_load_all_mappings_single_file(self):
         """Test loading a single mapping file."""
@@ -326,14 +325,7 @@ class TestWorkflows(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        for file in self.test_dir.rglob('*'):
-            if file.is_file():
-                file.unlink()
-        for dir in sorted(self.test_dir.rglob('*'), reverse=True):
-            if dir.is_dir():
-                dir.rmdir()
-        if self.test_dir.exists():
-            self.test_dir.rmdir()
+        cleanup_directory(self.test_dir)
 
     def test_svg_extract_and_inject_with_custom_output(self):
         """Test svg_extract_and_inject with custom output paths."""
@@ -444,14 +436,7 @@ class TestBatch(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        for file in self.test_dir.rglob('*'):
-            if file.is_file():
-                file.unlink()
-        for dir in sorted(self.test_dir.rglob('*'), reverse=True):
-            if dir.is_dir():
-                dir.rmdir()
-        if self.test_dir.exists():
-            self.test_dir.rmdir()
+        cleanup_directory(self.test_dir)
 
     def test_start_injects_single_file(self):
         """Test batch injection with a single file."""
@@ -534,9 +519,7 @@ class TestExtractor(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        for file in self.test_dir.glob('*'):
-            file.unlink()
-        self.test_dir.rmdir()
+        cleanup_directory(self.test_dir)
 
     def test_extract_with_multiple_languages(self):
         """Test extraction with multiple languages."""
@@ -663,9 +646,7 @@ class TestEdgeCases(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        for file in self.test_dir.glob('*'):
-            file.unlink()
-        self.test_dir.rmdir()
+        cleanup_directory(self.test_dir)
 
     def test_normalize_text_with_only_whitespace(self):
         """Test normalization with only whitespace."""
@@ -700,8 +681,8 @@ class TestEdgeCases(unittest.TestCase):
         svg_path = self.test_dir / "malformed.svg"
         svg_path.write_text("<svg><text>Unclosed", encoding='utf-8')
         
-        with self.assertRaises(etree.XMLSyntaxError):
-            extract(svg_path)
+        result = extract(svg_path)
+        self.assertIsNone(result)
 
     def test_inject_return_stats_false(self):
         """Test inject with return_stats=False."""
