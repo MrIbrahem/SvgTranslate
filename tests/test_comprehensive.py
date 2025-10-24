@@ -619,7 +619,7 @@ class TestExtractor(unittest.TestCase):
     def test_extract_empty_tspans(self):
         """Test extraction with empty tspan elements."""
         svg_path = self.test_dir / "test.svg"
-        
+
         svg_content = '''<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
     <switch>
@@ -627,11 +627,31 @@ class TestExtractor(unittest.TestCase):
     </switch>
 </svg>'''
         svg_path.write_text(svg_content, encoding='utf-8')
-        
+
         result = extract(svg_path)
-        
+
         # Should handle empty tspans gracefully
         self.assertIsNotNone(result)
+
+    def test_extract_translation_tspan_without_id(self):
+        """Translations without IDs should fall back to positional matching."""
+        svg_path = self.test_dir / "missing_id.svg"
+
+        svg_content = '''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+    <switch>
+        <text><tspan id="greeting">Hello</tspan></text>
+        <text systemLanguage="es"><tspan>Hola</tspan></text>
+    </switch>
+</svg>'''
+        svg_path.write_text(svg_content, encoding='utf-8')
+
+        result = extract(svg_path)
+
+        self.assertIsNotNone(result)
+        self.assertIn("new", result)
+        self.assertIn("hello", result["new"])
+        self.assertEqual(result["new"]["hello"].get("es"), "Hola")
 
 
 class TestEdgeCases(unittest.TestCase):

@@ -42,6 +42,7 @@ def extract(svg_file_path, case_insensitive: bool = True):
         switch_translations = {}
         tspans_by_id = {}
         default_texts = []
+        default_sequence = []
 
         for text_elem in text_elements:
             system_lang = text_elem.get('systemLanguage')
@@ -50,11 +51,35 @@ def extract(svg_file_path, case_insensitive: bool = True):
 
             tspans = text_elem.xpath('./svg:tspan', namespaces={'svg': 'http://www.w3.org/2000/svg'})
             if tspans:
-                tspans_by_id = {tspan.get('id'): tspan.text.strip() for tspan in tspans if tspan.text}
+                tspans_by_id = {
+                    tspan.get('id'): tspan.text.strip()
+                    for tspan in tspans
+                    if tspan.text and tspan.get('id')
+                }
                 translations["new"]["default_tspans_by_id"].update(tspans_by_id)
                 text_contents = [tspan.text.strip() if tspan.text else "" for tspan in tspans]
+                for tspan in tspans:
+                    if not tspan.text:
+                        continue
+                    text_value = tspan.text.strip()
+                    default_sequence.append(
+                        {
+                            "id": tspan.get('id'),
+                            "text": text_value,
+                            "normalized": normalize_text(text_value, case_insensitive),
+                        }
+                    )
             else:
                 text_contents = [text_elem.text.strip()] if text_elem.text else [""]
+                if text_elem.text and text_elem.text.strip():
+                    text_value = text_elem.text.strip()
+                    default_sequence.append(
+                        {
+                            "id": None,
+                            "text": text_value,
+                            "normalized": normalize_text(text_value, case_insensitive),
+                        }
+                    )
 
             default_texts = [normalize_text(text, case_insensitive) for text in text_contents]
             for text in default_texts:
@@ -77,13 +102,24 @@ def extract(svg_file_path, case_insensitive: bool = True):
 
             switch_translations[system_lang] = [normalize_text(text) for text in text_contents]
 
-            for text in text_contents:
+            for idx, text in enumerate(text_contents):
                 normalized_translation = normalize_text(text)
-                base_id = tspans_to_id.get(text.strip(), "").split("-")[0].strip()
-                english_text = (
-                    translations["new"]["default_tspans_by_id"].get(base_id)
-                    or translations["new"]["default_tspans_by_id"].get(base_id.lower())
-                )
+                stripped_text = text.strip() if text else ""
+                id_value = tspans_to_id.get(stripped_text)
+                base_id = None
+                if id_value:
+                    base_id = id_value.split("-")[0].strip()
+
+                english_text = None
+                if base_id:
+                    english_text = (
+                        translations["new"]["default_tspans_by_id"].get(base_id)
+                        or translations["new"]["default_tspans_by_id"].get(base_id.lower())
+                    )
+
+                if not english_text and idx < len(default_sequence):
+                    english_text = default_sequence[idx]["text"]
+
                 logger.debug(f"{base_id=}, {english_text=}")
                 if not english_text:
                     continue
