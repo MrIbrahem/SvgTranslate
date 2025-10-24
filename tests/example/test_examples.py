@@ -30,8 +30,14 @@ class TestIntegrationWorkflows:
             encoding="utf-8"
         )
 
+        expected_svg = FIXTURES_DIR / "after_translate.svg"
+        self.expected_text = expected_svg.read_text(encoding="utf-8")
+
+    def test_svg_extract_and_inject_end_to_end(self):
+        """Test complete extract and inject workflow."""
+
         # Run the workflow
-        self.result = svg_extract_and_inject(
+        result = svg_extract_and_inject(
             self.source_svg,
             self.target_svg,
             output_file=self.output_svg,
@@ -39,12 +45,7 @@ class TestIntegrationWorkflows:
             save_result=True,
         )
 
-        expected_svg = FIXTURES_DIR / "after_translate.svg"
-        self.expected_text = expected_svg.read_text(encoding="utf-8")
-
-    def test_svg_extract_and_inject_end_to_end(self):
-        """Test complete extract and inject workflow."""
-        assert self.result is not None
+        assert result is not None
         assert self.output_svg.exists()
         assert self.data_file.exists()
 
