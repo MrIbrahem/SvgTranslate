@@ -14,6 +14,34 @@ from .preparation import SvgStructureException, make_translation_ready
 
 logger = logging.getLogger(__name__)
 
+def get_target_path(
+    output_file: Path | str | None,
+    output_dir: Path | str | None,
+    svg_path: Path,
+) -> Path:
+    """Determines the target path for the output SVG file.
+
+    If an output file path is provided, it's used directly. Otherwise,
+    the path is constructed from an output directory (or the source file's
+    directory if not provided) and the source file's name. The necessary
+    parent directories are created in the latter case.
+
+    Args:
+        output_file: The explicit path for the output file.
+        output_dir: The directory to save the output file in.
+        svg_path: The path to the original SVG file.
+
+    Returns:
+        The resolved path for the output file.
+    """
+    if output_file:
+        target_path = Path(output_file)
+    else:
+        save_dir = output_dir or svg_path.parent
+        target_path = Path(save_dir) / svg_path.name
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+
+    return target_path
 
 def generate_unique_id(base_id: str, lang: str, existing_ids: set[str]) -> str:
     """Generate a unique identifier by appending the language and a counter."""
@@ -290,19 +318,12 @@ def inject(
         sort_switch_texts(elem)
 
     if save_result:
-        if output_file:
-            target_path = Path(output_file)
-        else:
-            output_dir = output_dir or svg_path.parent
-            target_path = Path(output_dir) / svg_path.name
-            target_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # Write the modified SVG
         try:
+            target_path = get_target_path(output_file, output_dir, svg_path)
             tree.write(str(target_path), encoding='utf-8', xml_declaration=True, pretty_print=True)
             logger.debug(f"Saved modified SVG to {target_path}")
         except Exception as e:
-            logger.error(f"Failed writing {target_path}: {e}")
+            logger.error(f"Failed writing {svg_path.name}: {e}")
             tree = None
 
     logger.debug(f"Processed {stats['processed_switches']} switches")
