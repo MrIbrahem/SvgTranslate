@@ -49,7 +49,7 @@ def normalize_lang(lang: str) -> str:
     """
     if not lang:
         return lang
-    pieces = re.split(r'[_\s]+', lang.strip())
+    pieces = re.split(r'[_\-\s]+', lang.strip())
     primary = pieces[0].lower()
     if len(pieces) > 1:
         rest = "-".join(p.upper() if len(p) == 2 else p.title() for p in pieces[1:])
@@ -92,6 +92,10 @@ def reorder_texts(root: etree._Element):
 
 def make_translation_ready(svg_file_path: Path, write_back: bool = False) -> Tuple[etree._ElementTree, etree._Element]:
     """Prepare an SVG file for translation and return its tree and root."""
+    svg_file_path = Path(str(svg_file_path))
+    if not svg_file_path.exists():
+        raise FileNotFoundError(f"SVG file not found: {svg_file_path}")
+
     parser = etree.XMLParser(remove_blank_text=True)
     tree = etree.parse(str(svg_file_path), parser)
     root = tree.getroot()
