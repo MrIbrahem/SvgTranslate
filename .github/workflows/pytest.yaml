@@ -3,7 +3,7 @@ name: Python pytest
 on:
   pull_request:
     branches:
-      - main
+      - "*"
 
 jobs:
   test:
