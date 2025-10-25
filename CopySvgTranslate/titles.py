@@ -1,33 +1,8 @@
 import logging
 from typing import Dict, List
+from .text_utils import normalize_text
 
 logger = logging.getLogger(__name__)
-
-
-def make_title_translations_match_all(
-    new: Dict[str, Dict[str, str]]
-) -> Dict[str, Dict[str, str]]:
-
-    all_mappings_title: Dict[str, Dict[str, str]] = {}
-
-    for key, mapping in list(new.items()):
-        if len(key) < 5:
-            continue
-
-        year = key[-4:]
-        if not key or key == year or not year.isdigit():
-            continue
-
-        # Ensure all translations end with the same 4-digit year
-        all_valid = all(value[-4:].isdigit() and value[-4:] == year for value in mapping.values())
-
-        if all_valid:
-            all_mappings_title[key[:-4].strip()] = {
-                lang: text[:-4].strip()
-                for lang, text in mapping.items()
-            }
-
-    return all_mappings_title
 
 
 def make_title_translations(
@@ -55,10 +30,14 @@ def make_title_translations(
     """
     all_mappings_title: Dict[str, Dict[str, str]] = {}
 
-    for key, mapping in list(new.items()):
+    new_fixed = {
+        x.strip(): {z.strip(): h.strip() for z, h in v.items()}
+        for x, v in new.items()
+    }
+
+    for key, mapping in list(new_fixed.items()):
         if len(key) < 5:
             continue
-
         year = key[-4:]
         if not key or key == year or not year.isdigit():
             continue

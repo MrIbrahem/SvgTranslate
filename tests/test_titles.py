@@ -128,3 +128,80 @@ class TestGetTitlesTranslations:
         assert result is not None
         assert isinstance(result, dict)
         assert result == {}
+
+
+class TestBoth:
+
+    def test_valid_translations(self):
+        data = {
+            "COVID-19 pandemic 2020": {
+                "en": "COVID-19 pandemic 2020",
+                "es": "Pandemia de COVID-19 2020",
+                "fr": "Pandémie de COVID-19 2020",
+            }
+        }
+        result = make_title_translations(data)
+        assert "COVID-19 pandemic" in result
+        assert result["COVID-19 pandemic"]["en"] == "COVID-19 pandemic"
+        assert result["COVID-19 pandemic"]["es"] == "Pandemia de COVID-19"
+
+    def test_invalid_year_key_skipped(self):
+        data = {"InvalidTitle": {"en": "InvalidTitle"}}
+        result = make_title_translations(data)
+        assert result == {}
+
+    def test_mismatched_years_skipped(self):
+        data = {
+            "Elections 2021": {"ss": "Lukhetfo lwa-2021", "de": "Elecciones 2020", "es": "Elecciones de 2021"}
+        }
+        result = make_title_translations(data)
+        assert result is not None
+        assert isinstance(result, dict)
+        assert result == {"Elections": {"ss": "Lukhetfo lwa-", "es": "Elecciones de"}}
+
+    def test_get_titles_translations_basic(self):
+        all_mappings = {
+            "COVID-19 pandemic": {"en": "COVID-19 pandemic", "es": "Pandemia de COVID-19"}
+        }
+        default_texts = ["COVID-19 pandemic 2020"]
+        result = get_titles_translations(all_mappings, default_texts)
+        assert "COVID-19 pandemic 2020" in result
+        assert result["COVID-19 pandemic 2020"]["es"] == "Pandemia de COVID-19 2020"
+
+    def test_get_titles_translations_multiple_years(self):
+        all_mappings = {
+            "Elections": {"ss": "Lukhetfo", "es": "Elecciones"},
+            "Pandemic": {"ar": "جائحة", "es": "Pandemia"},
+        }
+        texts = ["Elections 2019", "Pandemic 2020"]
+        result = get_titles_translations(all_mappings, texts)
+        assert result["Pandemic 2020"]["es"] == "Pandemia 2020"
+        assert result["Pandemic 2020"]["ar"] == "جائحة 2020"
+        assert result["Elections 2019"]["ss"] == "Lukhetfo 2019"
+
+    def test_whitespace_handling(self):
+        data = {" Event 2023 ": {"en": " Event 2023 ", "ar": " حدث 2023 "}}
+        result = make_title_translations(data)
+        assert "Event" in result
+        assert result["Event"]["ar"] == "حدث"
+        assert result == {"Event": {"ar": "حدث", "en": "Event"}}
+
+    def test_empty_input(self):
+        assert make_title_translations({}) == {}
+        assert get_titles_translations({}, []) == {}
+
+    def test_non_digit_suffix_ignored(self):
+        data = {"TitleX": {"en": "TitleX"}}
+        result = make_title_translations(data)
+        assert result == {}
+
+    def test_combined_workflow(self):
+        data = {
+            "Olympics 2016 ": {"en": "Olympics 2016", "fr": "Jeux olympiques 2016"},
+            " World Cup 2022 ": {"en": "World Cup 2022", "es": "Copa Mundial 2022"},
+        }
+        extracted = make_title_translations(data)
+        texts = ["Olympics 2060", "world Cup 6060"]
+        rebuilt = get_titles_translations(extracted, texts)
+        assert rebuilt["world Cup 6060"]["es"] == "Copa Mundial 6060"
+        assert rebuilt["Olympics 2060"]["fr"] == "Jeux olympiques 2060"
