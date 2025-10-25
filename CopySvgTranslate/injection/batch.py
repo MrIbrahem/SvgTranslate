@@ -27,7 +27,7 @@ def start_injects(
 
     for file in tqdm(files, total=len(files), desc="Inject files:"):
 
-        file = Path(file) if not isinstance(file, Path) else file
+        file = Path(str(file)) if not isinstance(file, Path) else file
 
         tree, stats = inject(
             file,

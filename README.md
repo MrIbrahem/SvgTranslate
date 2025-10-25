@@ -51,13 +51,13 @@ print(stats)
 ### Injecting with pre-translated data
 
 When you already have the translation JSON, load it and use
-`svg_extract_and_injects` directly. Important parameters include `overwrite`
+`inject` directly. Important parameters include `overwrite`
 to update existing translations and `output_dir` to control where translated
 files are written.
 
 ```python
 from pathlib import Path
-from CopySvgTranslate import svg_extract_and_injects
+from CopySvgTranslate import inject
 
 translations = {
     "new": {
@@ -65,13 +65,17 @@ translations = {
     }
 }
 
-tree, stats = svg_extract_and_injects(
-    translations=translations,
-    inject_file=Path("examples/target_missing_translations.svg"),
-    save_result=True,
-    overwrite=True,
+tree, stats = inject(
+    inject_file: Path("examples/target_missing_translations.svg"),
+    mapping_files: Iterable[Path | str] | None = None,
+    all_mappings: Mapping | None = None,
+    case_insensitive: bool = True,
+    output_file: Path | None = None,
     output_dir=Path("./translated"),
+    overwrite=True,
+    save_result=True,
     return_stats=True,
+    translations=translations,
 )
 
 print("Saved to", Path("./translated/target_missing_translations.svg"))

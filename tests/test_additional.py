@@ -168,8 +168,11 @@ class TestWorkflowFunctions:
         target = temp_dir / "target.svg"
         content = '''<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"><switch><text id="t1"><tspan>Hi</tspan></text></switch></svg>'''
         target.write_text(content, encoding='utf-8')
+
         translations = {"new": {"hi": {"ar": "مرحبا"}}}
-        tree, stats = inject(translations, target, output_dir=temp_dir, return_stats=True)
+
+        tree, stats = inject(all_mappings=translations, inject_file=target, output_dir=temp_dir, return_stats=True)
+
         assert tree is not None
         assert stats is not None
 
