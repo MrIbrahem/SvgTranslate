@@ -66,8 +66,8 @@ translations = {
 }
 
 tree, stats = inject(
-    inject_file: Path("examples/target_missing_translations.svg"),
-    all_mappings: translations,
+    inject_file=Path("examples/target_missing_translations.svg"),
+    all_mappings=translations,
     output_dir=Path("./translated"),
     overwrite=True,
     save_result=True,
