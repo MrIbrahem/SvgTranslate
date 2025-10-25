@@ -12,7 +12,7 @@ from CopySvgTranslate import make_title_translations, get_titles_translations
 
 class TestIntegrationWorkflows:
 
-    def test_inject_with_dict(self):
+    def test_get_titles_translations_one_bad(self):
         data = {
             "parkinson's disease prevalence, 1990": {
                 "pt": "Prevalência de doença de Parkinson, 1990",
@@ -73,3 +73,25 @@ class TestIntegrationWorkflows:
         assert result is not None
         assert isinstance(result, dict)
         assert result == expected_data
+
+    def test_get_titles_translations_not_matched(self):
+        insert_data = {
+            "parkinson's disease prevalence ,": {
+                "pt": "Prevalência de doença de Parkinson,",
+                "es": "Prevalencia de la enfermedad de Parkinson,",
+                "ca": "Prevalència de la malaltia de Parkinson,",
+                "eu": "Parkinsonen gaixotasunaren prebalentzia,",
+                "cs": "Prevalence Parkinsonovy nemoci,",
+                "si": "පාකින්සන් රෝග ව්‍යාප්තිය,",
+                "ar": "انتشار مرض باركنسون،"
+            }
+        }
+        default_texts = [
+            "parkinson's disease prevalence, 2028"
+        ]
+
+        result = get_titles_translations(insert_data, default_texts)
+
+        assert result is not None
+        assert isinstance(result, dict)
+        assert result == {}

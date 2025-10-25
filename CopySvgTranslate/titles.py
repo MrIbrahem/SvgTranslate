@@ -1,6 +1,5 @@
-
 import logging
-from typing import Dict
+from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -8,17 +7,41 @@ logger = logging.getLogger(__name__)
 def make_title_translations(
     new: Dict[str, Dict[str, str]]
 ) -> Dict[str, Dict[str, str]]:
-    all_mappings_title = {}
+    """
+    Extract valid title translations by verifying that all translations in a mapping
+    end with the same 4-digit year as the key.
+
+    Example:
+        Input:
+            {
+                "COVID-19 pandemic 2020": {"ar": "جائحة كوفيد 2020", "es": "Pandemia de COVID-19 2020"}
+            }
+        Output:
+            {
+                "COVID-19 pandemic": {"ar": "جائحة كوفيد", "es": "Pandemia de COVID-19"}
+            }
+
+    Args:
+        new: A dictionary mapping full titles (ending with a year) to their translations.
+
+    Returns:
+        A dictionary mapping year -> { language -> title without year }.
+    """
+    all_mappings_title: Dict[str, Dict[str, str]] = {}
 
     for key, mapping in list(new.items()):
+        if len(key) < 5:
+            continue
+
         year = key[-4:]
         if not key or key == year or not year.isdigit():
             continue
 
+        # Ensure all translations end with the same 4-digit year
         all_valid = all(value[-4:].isdigit() and value[-4:] == year for value in mapping.values())
 
         if all_valid:
-            # all_mappings_title[year] = { lang: text[:-4] for lang, text in mapping.items() }
+            # Store translations without the trailing year
             all_mappings_title[key[:-4].strip()] = {
                 lang: text[:-4].strip()
                 for lang, text in mapping.items()
@@ -28,16 +51,36 @@ def make_title_translations(
 
 
 def get_titles_translations(
-    all_mappings_title: Dict,
-    default_texts: list[str],
-)-> Dict:
+    all_mappings_title: Dict[str, Dict[str, str]],
+    default_texts: List[str],
+) -> Dict[str, Dict[str, str]]:
+    """
+    Build reconstructed translations by reattaching the year to the base titles.
 
-    titles_translations = {}
+    Example:
+        Input:
+            all_mappings_title = {
+                "COVID-19 pandemic": {"ar": "جائحة كوفيد", "es": "Pandemia de COVID-19"}
+            }
+            default_texts = ["COVID-19 pandemic 1990"]
+        Output:
+            {
+                "COVID-19 pandemic 1990": {"en": "COVID-19 pandemic 1990", "es": "Pandemia de COVID-19 1990"}
+            }
+
+    Args:
+        all_mappings_title: Dictionary from year -> translations without year.
+        default_texts: List of default titles (with years) to reconstruct translations for.
+
+    Returns:
+        Dictionary mapping original title -> translations including the year.
+    """
+    titles_translations: Dict[str, Dict[str, str]] = {}
 
     for text in default_texts:
-        if text[-4:].isdigit():
+        if len(text) > 4 and text[-4:].isdigit():
             year = text[-4:]
-            key = text[:-4]
+            key = text[:-4].strip()
             translations = all_mappings_title.get(key) or all_mappings_title.get(key.strip())
             if translations:
                 titles_translations[text] = {lang: f"{value} {year}" for lang, value in translations.items()}

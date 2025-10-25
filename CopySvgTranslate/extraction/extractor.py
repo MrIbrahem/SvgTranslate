@@ -82,7 +82,7 @@ def extract(svg_file_path, case_insensitive: bool = True):
         "title": {},
         "tspans_by_id": {}
     }
-    tspans_by_id = translations["tspans_by_id"] = {}
+    tspans_by_id = translations["tspans_by_id"]
 
     for switch in switches:
         # Find all text elements within this switch
