@@ -20,7 +20,7 @@ from CopySvgTranslate import svg_extract_and_inject
 tree = svg_extract_and_inject(
     extract_file=Path("examples/source_multilingual.svg"),
     inject_file=Path("examples/target_missing_translations.svg"),
-    data_output_file = Path("examples/data.json")
+    data_output_file = Path("examples/data.json"),
     save_result=True,
 )
 
@@ -51,13 +51,13 @@ print(stats)
 ### Injecting with pre-translated data
 
 When you already have the translation JSON, load it and use
-`svg_extract_and_injects` directly. Important parameters include `overwrite`
+`inject` directly. Important parameters include `overwrite`
 to update existing translations and `output_dir` to control where translated
 files are written.
 
 ```python
 from pathlib import Path
-from CopySvgTranslate import svg_extract_and_injects
+from CopySvgTranslate import inject
 
 translations = {
     "new": {
@@ -65,12 +65,12 @@ translations = {
     }
 }
 
-tree, stats = svg_extract_and_injects(
-    translations=translations,
+tree, stats = inject(
     inject_file=Path("examples/target_missing_translations.svg"),
-    save_result=True,
-    overwrite=True,
+    all_mappings=translations,
     output_dir=Path("./translated"),
+    overwrite=True,
+    save_result=True,
     return_stats=True,
 )
 
@@ -81,17 +81,12 @@ print(stats)
 ## Data Model
 
 The extractor writes a JSON document rooted under the `"new"` key. Each entry
-maps normalized English text to a dictionary of language codes and
-translations. Metadata such as `"default_tspans_by_id"` is used internally to
-reconstruct the SVG structure during injection. An example of the modern
-format:
+maps normalized English text to a dictionary of language codes and translations.
+An example of the modern format:
 
 ```json
 {
   "new": {
-    "default_tspans_by_id": {
-      "text2213": "but are connected in anti-phase"
-    },
     "but are connected in anti-phase": {
       "ar": "لكنها موصولة بمرحلتين متعاكستين."
     }
@@ -128,9 +123,6 @@ above.
 ```json
 {
   "new": {
-    "default_tspans_by_id": {
-      "text2213": "but are connected in anti-phase"
-    },
     "but are connected in anti-phase": {
       "ar": "لكنها موصولة بمرحلتين متعاكستين."
     }
@@ -138,7 +130,7 @@ above.
 }
 ```
 
-### Injection Example 
+### Injection Example
 - TODO
 
 ## Testing

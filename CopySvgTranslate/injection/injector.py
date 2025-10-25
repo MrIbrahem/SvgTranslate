@@ -14,35 +14,38 @@ from .preparation import SvgStructureException, make_translation_ready
 
 logger = logging.getLogger(__name__)
 
+
 def get_target_path(
     output_file: Path | str | None,
     output_dir: Path | str | None,
-    svg_path: Path,
+    inject_path: Path,
 ) -> Path:
-    """Determines the target path for the output SVG file.
+    """
+    Determine the filesystem path where the modified SVG should be written.
 
-    If an output file path is provided, it's used directly. Otherwise,
-    the path is constructed from an output directory (or the source file's
-    directory if not provided) and the source file's name. The necessary
-    parent directories are created in the latter case.
+    If `output_file` is provided, it is used as the target path. Otherwise the path is constructed by combining `output_dir` (if given) or the source file's directory with the source file's name. In all cases the parent directories for the resolved path are created if they do not exist.
 
-    Args:
-        output_file: The explicit path for the output file.
-        output_dir: The directory to save the output file in.
-        svg_path: The path to the original SVG file.
+    Parameters:
+        output_file (Path | str | None): Explicit output file path to use.
+        output_dir (Path | str | None): Directory to place the output file when `output_file` is not provided.
+        inject_path (Path): Path to the original SVG file; its name is used when constructing a target path.
 
     Returns:
-        The resolved path for the output file.
+        Path: The resolved filesystem path for the output SVG file.
     """
+    if output_dir:
+        output_dir = Path(str(output_dir)) if not isinstance(output_dir, Path) else output_dir
+
     if output_file:
-        target_path = Path(output_file)
+        target_path = Path(str(output_file)) if not isinstance(output_file, Path) else output_file
         target_path.parent.mkdir(parents=True, exist_ok=True)
     else:
-        save_dir = output_dir or svg_path.parent
-        target_path = Path(save_dir) / svg_path.name
+        save_dir = output_dir or inject_path.parent
+        target_path = save_dir / inject_path.name
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
     return target_path
+
 
 def generate_unique_id(base_id: str, lang: str, existing_ids: set[str]) -> str:
     """Generate a unique identifier by appending the language and a counter."""
@@ -65,7 +68,8 @@ def load_all_mappings(mapping_files: Iterable[Path | str]) -> dict:
     all_mappings: dict = {}
 
     for mapping_file in mapping_files:
-        mapping_path = Path(mapping_file)
+        mapping_path = Path(str(mapping_file)) if not isinstance(mapping_file, Path) else mapping_file
+
         if not mapping_path.exists():
             logger.warning(f"Mapping file not found: {mapping_path}")
             continue
@@ -151,7 +155,7 @@ def work_on_switches(
             if key in all_mappings:
                 available_translations[key] = all_mappings[key]
             else:
-                logger.warning(f"No mapping for '{key}'")
+                logger.debug(f"No mapping for '{key}'")
 
         if not available_translations:
             continue
@@ -259,7 +263,7 @@ def sort_switch_texts(elem):
 
 
 def inject(
-    svg_file_path: Path | str,
+    inject_file: Path | str,
     mapping_files: Iterable[Path | str] | None = None,
     all_mappings: Mapping | None = None,
     case_insensitive: bool = True,
@@ -268,18 +272,25 @@ def inject(
     overwrite: bool = False,
     save_result: bool = False,
     return_stats: bool = False,
+    **kwargs,
 ):
     """Inject translations into the provided SVG file."""
 
-    svg_path = Path(svg_file_path)
+    if not inject_file and kwargs.get("svg_file_path"):
+        inject_file = kwargs["svg_file_path"]
 
-    if not svg_path.exists():
-        logger.error(f"SVG file not found: {svg_path}")
+    inject_path = Path(str(inject_file)) if not isinstance(inject_file, Path) else inject_file
+
+    if not inject_path.exists():
+        logger.error(f"SVG file not found: {inject_path}")
         error = {"error": "File not exists"}
         return (None, error) if return_stats else None
 
-    if not all_mappings:
-        mapping_files = list(mapping_files or [])
+    if not all_mappings and kwargs.get("translations"):
+        all_mappings = kwargs["translations"]
+
+    if not all_mappings and mapping_files:
+        mapping_files = list(mapping_files)
         all_mappings = load_all_mappings(mapping_files)
 
     if not all_mappings:
@@ -287,11 +298,11 @@ def inject(
         error = {"error": "No valid mappings found"}
         return (None, error) if return_stats else None
 
-    logger.debug(f"Injecting translations into {svg_path}")
+    logger.debug(f"Injecting translations into {inject_path}")
 
     # Parse SVG as XML
     try:
-        tree, root = make_translation_ready(svg_path, write_back=False)
+        tree, root = make_translation_ready(inject_path, write_back=False)
     except SvgStructureException as exc:
         error = {"error": str(exc)}
         return (None, error) if return_stats else None
@@ -320,11 +331,11 @@ def inject(
 
     if save_result:
         try:
-            target_path = get_target_path(output_file, output_dir, svg_path)
+            target_path = get_target_path(output_file, output_dir, inject_path)
             tree.write(str(target_path), encoding='utf-8', xml_declaration=True, pretty_print=True)
             logger.debug(f"Saved modified SVG to {target_path}")
         except Exception as e:
-            logger.error(f"Failed writing {svg_path.name}: {e}")
+            logger.error(f"Failed writing {inject_path.name}: {e}")
             tree = None
 
     logger.debug(f"Processed {stats['processed_switches']} switches")

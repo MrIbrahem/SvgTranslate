@@ -21,9 +21,22 @@ def svg_extract_and_inject(
     overwrite: bool | None = None,
     save_result: bool = False,
 ):
-    """Extract translations from one SVG and inject them into another."""
-    extract_path = Path(str(extract_file))
-    inject_path = Path(str(inject_file))
+    """
+    Extract translations from one SVG and inject them into another.
+
+    Parameters:
+        extract_file (Path | str): Path to the SVG file to extract translations from.
+        inject_file (Path | str): Path to the SVG file to inject translations into.
+        output_file (Path | None): Optional path for the resulting injected SVG. If omitted, a file with the same name as `inject_file` is created in a `translated` directory under the current working directory.
+        data_output_file (Path | None): Optional path for the JSON file that will store extracted translations. If omitted, a file named after `extract_file` is created in a `data` directory under the current working directory.
+        overwrite (bool | None): If `True`, existing translation nodes inside the SVG are updated; when `False`, they are left as-is. Ignored for file I/O: when `save_result=True`, the output file is written regardless. `None` is treated as `False`.
+        save_result (bool): If `True`, the injection result will be saved to `output_file`.
+
+    Returns:
+        ElementTree | None: The parsed tree of the injected SVG when successful, `None` if extraction or injection failed.
+    """
+    extract_path = Path(str(extract_file)) if not isinstance(extract_file, Path) else extract_file
+    inject_path = Path(str(inject_file)) if not isinstance(inject_file, Path) else inject_file
 
     translations = extract(extract_path, case_insensitive=True)
     if not translations:
@@ -36,7 +49,7 @@ def svg_extract_and_inject(
 
         data_output_file = json_output_dir / f"{extract_path.name}.json"
 
-    data_output_file = Path(data_output_file)
+    data_output_file = Path(str(data_output_file)) if not isinstance(data_output_file, Path) else data_output_file
     data_output_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Save translations to JSON
@@ -75,16 +88,16 @@ def svg_extract_and_injects(
     **kwargs,
 ):
     """Inject provided translations into a single SVG file."""
-    inject_path = Path(str(inject_file))
+    inject_path = Path(str(inject_file)) if not isinstance(inject_file, Path) else inject_file
 
     if not output_dir and save_result:
         output_dir = Path.cwd() / "translated"
         output_dir.mkdir(parents=True, exist_ok=True)
 
     return inject(
-        inject_path,
-        output_dir=output_dir,
+        inject_file=inject_path,
         all_mappings=translations,
+        output_dir=output_dir,
         save_result=save_result,
         **kwargs,
     )
